@@ -16,7 +16,6 @@ public class IngredientRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // GET /ingredients → liste complète (comme demandé dans le TD5)
     public List<Ingredient> findAllIngredients() {
         String sql = "SELECT id, name, price, category FROM ingredient ORDER BY id";
 

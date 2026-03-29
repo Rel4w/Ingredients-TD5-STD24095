@@ -19,7 +19,6 @@ public class IngredientController {
         this.repository = repository;
     }
 
-    // Endpoint demandé dans le TD5
     @GetMapping
     public ResponseEntity<List<Ingredient>> getAllIngredients() {
         List<Ingredient> ingredients = repository.findAllIngredients();
