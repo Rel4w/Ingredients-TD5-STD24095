@@ -9,22 +9,17 @@ public class Dish {
     private Integer id;
     private String name;
     private DishTypeEnum dishType;
-    private Double sellingPrice; // Nouvel attribut
-    private List<Ingredient> ingredients;
+    private Double sellingPrice;
+    private List<Ingredient> ingredients = new ArrayList<>();
 
-    // Constructeurs
-    public Dish() {
-        this.ingredients = new ArrayList<>();
-    }
+    public Dish() {}
 
     public Dish(Integer id, String name, DishTypeEnum dishType) {
         this.id = id;
         this.name = name;
         this.dishType = dishType;
-        this.ingredients = new ArrayList<>();
     }
 
-    // Getters et Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -38,30 +33,28 @@ public class Dish {
     public void setSellingPrice(Double sellingPrice) { this.sellingPrice = sellingPrice; }
 
     public List<Ingredient> getIngredients() { return ingredients; }
-    public void setIngredients(List<Ingredient> ingredients) { this.ingredients = ingredients; }
+    public void setIngredients(List<Ingredient> ingredients) {
+        this.ingredients = (ingredients != null) ? ingredients : new ArrayList<>();
+    }
 
     public Double getDishCost() {
         if (ingredients == null || ingredients.isEmpty()) {
             return 0.0;
         }
-
-        double totalCost = 0.0;
-        for (Ingredient ingredient : ingredients) {
-            if (ingredient.getRequiredQuantity() == null) {
-                throw new RuntimeException("Quantité nécessaire inconnue pour l'ingrédient: " +
-                        ingredient.getName() + " dans le plat: " + this.name);
+        double total = 0.0;
+        for (Ingredient ing : ingredients) {
+            if (ing.getRequiredQuantity() != null && ing.getPrice() != null) {
+                total += ing.getPrice() * ing.getRequiredQuantity();
             }
-            totalCost += ingredient.getPrice() * ingredient.getRequiredQuantity();
         }
-        return totalCost;
+        return total;
     }
 
     public Double getGrossMargin() {
         if (sellingPrice == null) {
-            throw new RuntimeException("Prix de vente non défini pour le plat: " + this.name);
+            return null;
         }
-        Double cost = getDishCost();
-        return sellingPrice - cost;
+        return sellingPrice - getDishCost();
     }
 
     @Override
@@ -71,7 +64,6 @@ public class Dish {
                 ", name='" + name + '\'' +
                 ", dishType=" + dishType +
                 ", sellingPrice=" + sellingPrice +
-                ", ingredients=" + ingredients +
                 '}';
     }
 }
