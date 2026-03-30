@@ -1,10 +1,9 @@
 package restaurant.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import restaurant.entity.Ingredient;
+import restaurant.entity.StockValue;
 import restaurant.repository.IngredientRepository;
 
 import java.util.List;
@@ -23,5 +22,20 @@ public class IngredientController {
     public ResponseEntity<List<Ingredient>> getAllIngredients() {
         List<Ingredient> ingredients = repository.findAllIngredients();
         return ResponseEntity.ok(ingredients);
+    }
+
+    @GetMapping("/{id}/stock")
+    public ResponseEntity<StockValue> getStockAt(
+            @PathVariable Integer id,
+            @RequestParam("at") String atStr,
+            @RequestParam("unit") String unit) {
+
+        try {
+            java.time.Instant at = java.time.Instant.parse(atStr);
+            StockValue stock = repository.getStockValueAt(id, at, unit);
+            return ResponseEntity.ok(stock);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

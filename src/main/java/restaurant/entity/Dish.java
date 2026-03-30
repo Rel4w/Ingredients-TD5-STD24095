@@ -38,9 +38,7 @@ public class Dish {
     }
 
     public Double getDishCost() {
-        if (ingredients == null || ingredients.isEmpty()) {
-            return 0.0;
-        }
+        if (ingredients == null || ingredients.isEmpty()) return 0.0;
         double total = 0.0;
         for (Ingredient ing : ingredients) {
             if (ing.getRequiredQuantity() != null && ing.getPrice() != null) {
@@ -51,19 +49,7 @@ public class Dish {
     }
 
     public Double getGrossMargin() {
-        if (sellingPrice == null) {
-            return null;
-        }
+        if (sellingPrice == null) return null;
         return sellingPrice - getDishCost();
-    }
-
-    @Override
-    public String toString() {
-        return "Dish{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", dishType=" + dishType +
-                ", sellingPrice=" + sellingPrice +
-                '}';
     }
 }
