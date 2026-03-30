@@ -13,7 +13,6 @@ public class Dish {
     private List<Ingredient> ingredients = new ArrayList<>();
 
     public Dish() {}
-
     public Dish(Integer id, String name, DishTypeEnum dishType) {
         this.id = id;
         this.name = name;
@@ -34,7 +33,7 @@ public class Dish {
 
     public List<Ingredient> getIngredients() { return ingredients; }
     public void setIngredients(List<Ingredient> ingredients) {
-        this.ingredients = (ingredients != null) ? ingredients : new ArrayList<>();
+        this.ingredients = ingredients != null ? ingredients : new ArrayList<>();
     }
 
     public Double getDishCost() {

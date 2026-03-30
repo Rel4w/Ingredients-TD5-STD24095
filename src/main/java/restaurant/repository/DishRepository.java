@@ -20,7 +20,6 @@ public class DishRepository {
 
     public List<Dish> findAllDishes() {
         String sql = "SELECT id, name, dish_type, selling_price FROM dish ORDER BY id";
-
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Dish dish = new Dish();
             dish.setId(rs.getInt("id"));
@@ -86,5 +85,21 @@ public class DishRepository {
 
         dish.setIngredients(ingredients);
         return dish;
+    }
+
+    public void updateDishIngredients(Integer dishId, List<Ingredient> newIngredients) {
+        jdbcTemplate.update("DELETE FROM dishingredient WHERE id_dish = ?", dishId);
+
+        String sql = """
+            INSERT INTO dishingredient (id_dish, id_ingredient, quantity_required, unit) 
+            VALUES (?, ?, ?, ?::unit_enum)
+            """;
+
+        for (Ingredient ing : newIngredients) {
+            if (ing.getId() != null) {
+                double qty = (ing.getRequiredQuantity() != null) ? ing.getRequiredQuantity() : 0.0;
+                jdbcTemplate.update(sql, dishId, ing.getId(), qty, "KG");
+            }
+        }
     }
 }
