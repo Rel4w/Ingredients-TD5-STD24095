@@ -49,4 +49,20 @@ public class DishController {
         repository.updateDishIngredients(id, ingredients);
         return ResponseEntity.ok("Ingrédients mis à jour pour le plat " + id);
     }
+
+    @GetMapping("/{id}/ingredients")
+    public ResponseEntity<?> getDishIngredients(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String ingredientName,
+            @RequestParam(required = false) Double ingredientPriceAround) {
+
+        if (!repository.existsDishById(id)) {
+            return ResponseEntity.status(404).body("Dish.id=" + id + " is not found");
+        }
+
+        List<Ingredient> ingredients = repository.findIngredientsByDishId(
+                id, ingredientName, ingredientPriceAround);
+
+        return ResponseEntity.ok(ingredients);
+    }
 }

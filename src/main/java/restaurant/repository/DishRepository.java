@@ -7,6 +7,7 @@ import restaurant.entity.Ingredient;
 import restaurant.enums.CategoryEnum;
 import restaurant.enums.DishTypeEnum;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -24,7 +25,6 @@ public class DishRepository {
             Dish dish = new Dish();
             dish.setId(rs.getInt("id"));
             dish.setName(rs.getString("name"));
-
             String typeStr = rs.getString("dish_type");
             if (typeStr != null) {
                 try {
@@ -33,7 +33,6 @@ public class DishRepository {
                     dish.setDishType(DishTypeEnum.START);
                 }
             }
-
             Object priceObj = rs.getObject("selling_price");
             if (priceObj != null) {
                 dish.setSellingPrice(rs.getDouble("selling_price"));
@@ -46,11 +45,10 @@ public class DishRepository {
         if (id == null) return null;
 
         String dishSql = "SELECT id, name, dish_type, selling_price FROM dish WHERE id = ?";
-        Dish dish = jdbcTemplate.queryForObject(dishSql, (rs, rowNum) -> {
+        List<Dish> results = jdbcTemplate.query(dishSql, (rs, rowNum) -> {
             Dish d = new Dish();
             d.setId(rs.getInt("id"));
             d.setName(rs.getString("name"));
-
             String typeStr = rs.getString("dish_type");
             if (typeStr != null) {
                 try {
@@ -59,11 +57,13 @@ public class DishRepository {
                     d.setDishType(DishTypeEnum.START);
                 }
             }
-
             Object sp = rs.getObject("selling_price");
             if (sp != null) d.setSellingPrice(rs.getDouble("selling_price"));
             return d;
         }, id);
+
+        if (results.isEmpty()) return null;
+        Dish dish = results.get(0);
 
         String ingSql = """
             SELECT i.id, i.name, i.price, i.category, di.quantity_required
@@ -87,11 +87,56 @@ public class DishRepository {
         return dish;
     }
 
+    public boolean existsDishById(Integer id) {
+        String sql = "SELECT COUNT(*) FROM dish WHERE id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
+        return count != null && count > 0;
+    }
+
+    public List<Ingredient> findIngredientsByDishId(
+            Integer dishId,
+            String ingredientName,
+            Double ingredientPriceAround) {
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT i.id, i.name, i.price, i.category, di.quantity_required
+            FROM ingredient i
+            JOIN dishingredient di ON i.id = di.id_ingredient
+            WHERE di.id_dish = ?
+            """);
+
+        List<Object> params = new ArrayList<>();
+        params.add(dishId);
+
+        if (ingredientName != null && !ingredientName.isBlank()) {
+            sql.append(" AND i.name ILIKE ?");
+            params.add("%" + ingredientName + "%");
+        }
+
+        if (ingredientPriceAround != null) {
+            sql.append(" AND i.price BETWEEN ? AND ?");
+            params.add(ingredientPriceAround - 50);
+            params.add(ingredientPriceAround + 50);
+        }
+
+        sql.append(" ORDER BY i.id");
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+            Ingredient ing = new Ingredient();
+            ing.setId(rs.getInt("id"));
+            ing.setName(rs.getString("name"));
+            ing.setPrice(rs.getDouble("price"));
+            ing.setCategory(CategoryEnum.valueOf(rs.getString("category")));
+            ing.setRequiredQuantity(rs.getDouble("quantity_required"));
+            return ing;
+        }, params.toArray());
+    }
+
     public void updateDishIngredients(Integer dishId, List<Ingredient> newIngredients) {
         jdbcTemplate.update("DELETE FROM dishingredient WHERE id_dish = ?", dishId);
 
         String sql = """
-            INSERT INTO dishingredient (id_dish, id_ingredient, quantity_required, unit) 
+            INSERT INTO dishingredient (id_dish, id_ingredient, quantity_required, unit)
             VALUES (?, ?, ?, ?::unit_enum)
             """;
 
