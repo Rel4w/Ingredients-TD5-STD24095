@@ -48,4 +48,17 @@ public class IngredientRepository {
             return new StockValue(quantity, restaurant.enums.UnitEnum.valueOf(unit));
         }, ingredientId, java.sql.Timestamp.from(at)).stream().findFirst().orElse(new StockValue(0.0, restaurant.enums.UnitEnum.KG));
     }
+
+    public Ingredient findIngredientById(Integer id) {
+        String sql = "SELECT id, name, price, category FROM ingredient WHERE id = ?";
+        List<Ingredient> results = jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Ingredient ing = new Ingredient();
+            ing.setId(rs.getInt("id"));
+            ing.setName(rs.getString("name"));
+            ing.setPrice(rs.getDouble("price"));
+            ing.setCategory(CategoryEnum.valueOf(rs.getString("category")));
+            return ing;
+        }, id);
+        return results.isEmpty() ? null : results.get(0);
+    }
 }

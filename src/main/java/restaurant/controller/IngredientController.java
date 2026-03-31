@@ -38,4 +38,13 @@ public class IngredientController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Ingredient> getIngredientById(@PathVariable Integer id) {
+        Ingredient ingredient = repository.findIngredientById(id);
+        if (ingredient == null) {
+            return ResponseEntity.status(404).body(null);
+        }
+        return ResponseEntity.ok(ingredient);
+    }
 }
