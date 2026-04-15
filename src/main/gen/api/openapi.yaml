@@ -1,0 +1,359 @@
+openapi: 3.0.3
+info:
+  description: API REST de gestion des plats et ingrédients du restaurant
+  title: Restaurant API
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+paths:
+  /ingredients:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+                type: array
+          description: Liste des ingrédients récupérée avec succès
+      summary: Retourne la liste de tous les ingrédients
+      x-accepts:
+      - application/json
+  /ingredients/{id}:
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+          description: Ingrédient trouvé
+        "404":
+          content:
+            text/plain:
+              schema:
+                example: Ingredient.id=1 is not found
+                type: string
+          description: Ingrédient non trouvé
+      summary: Retourne un ingrédient par son identifiant
+      x-accepts:
+      - application/json
+      - text/plain
+  /ingredients/{id}/stock:
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      - explode: true
+        in: query
+        name: at
+        required: true
+        schema:
+          example: 2024-01-01T00:00:00Z
+          format: date-time
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: unit
+        required: true
+        schema:
+          enum:
+          - KG
+          - L
+          - PIECE
+          - UNIT
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockValue'
+          description: Valeur du stock récupérée avec succès
+        "400":
+          content:
+            text/plain:
+              schema:
+                example: Either mandatory query parameter `at` or `unit` is not provided.
+                type: string
+          description: Paramètre at ou unit manquant
+        "404":
+          content:
+            text/plain:
+              schema:
+                example: Ingredient.id=1 is not found
+                type: string
+          description: Ingrédient non trouvé
+      summary: Retourne la valeur du stock d'un ingrédient à un instant donné
+      x-accepts:
+      - application/json
+      - text/plain
+  /dishes:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Dish'
+                type: array
+          description: Liste des plats récupérée avec succès
+      summary: Retourne la liste de tous les plats
+      x-accepts:
+      - application/json
+  /dishes/{id}:
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dish'
+          description: Plat trouvé
+        "404":
+          content:
+            text/plain:
+              schema:
+                example: Dish.id=1 is not found
+                type: string
+          description: Plat non trouvé
+      summary: Retourne un plat par son identifiant
+      x-accepts:
+      - application/json
+      - text/plain
+  /dishes/{id}/ingredients:
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      - description: Filtre les ingrédients dont le nom contient cette valeur (insensible
+          à la casse)
+        explode: true
+        in: query
+        name: ingredientName
+        required: false
+        schema:
+          example: tomate
+          type: string
+        style: form
+      - description: Filtre les ingrédients dont le prix est dans un intervalle de
+          ±50 autour de cette valeur
+        explode: true
+        in: query
+        name: ingredientPriceAround
+        required: false
+        schema:
+          example: 1200
+          format: double
+          type: number
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+                type: array
+          description: Liste des ingrédients du plat récupérée avec succès
+        "404":
+          content:
+            text/plain:
+              schema:
+                example: Dish.id=1 is not found
+                type: string
+          description: Plat non trouvé
+      summary: Retourne la liste des ingrédients composant un plat avec filtres optionnels
+      x-accepts:
+      - application/json
+      - text/plain
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/IngredientInput'
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                example: Ingrédients mis à jour pour le plat 1
+                type: string
+          description: Ingrédients mis à jour avec succès
+        "400":
+          content:
+            text/plain:
+              schema:
+                example: Corps de requête obligatoire contenant la liste d'ingrédients
+                type: string
+          description: Corps de requête manquant ou vide
+        "404":
+          content:
+            text/plain:
+              schema:
+                example: Dish.id=1 is not found
+                type: string
+          description: Plat non trouvé
+      summary: Met à jour la liste des ingrédients d'un plat
+      x-content-type: application/json
+      x-accepts:
+      - text/plain
+components:
+  schemas:
+    Ingredient:
+      example:
+        requiredQuantity: 0.5
+        price: 1200.0
+        name: Laitue
+        id: 1
+        category: VEGETABLE
+      properties:
+        id:
+          example: 1
+          type: integer
+        name:
+          example: Laitue
+          type: string
+        price:
+          example: 1200.0
+          format: double
+          type: number
+        category:
+          enum:
+          - VEGETABLE
+          - ANIMAL
+          - MARINE
+          - DAIRY
+          - OTHER
+          example: VEGETABLE
+          type: string
+        requiredQuantity:
+          example: 0.5
+          format: double
+          nullable: true
+          type: number
+      type: object
+    IngredientInput:
+      example:
+        requiredQuantity: 0.5
+        id: 1
+      properties:
+        id:
+          example: 1
+          type: integer
+        requiredQuantity:
+          example: 0.5
+          format: double
+          type: number
+      type: object
+    Dish:
+      example:
+        sellingPrice: 15000.0
+        dishType: START
+        name: Salade César
+        ingredients:
+        - requiredQuantity: 0.5
+          price: 1200.0
+          name: Laitue
+          id: 1
+          category: VEGETABLE
+        - requiredQuantity: 0.5
+          price: 1200.0
+          name: Laitue
+          id: 1
+          category: VEGETABLE
+        id: 1
+        grossMargin: 13800.0
+        dishCost: 1200.0
+      properties:
+        id:
+          example: 1
+          type: integer
+        name:
+          example: Salade César
+          type: string
+        dishType:
+          enum:
+          - START
+          - MAIN
+          - DESSERT
+          example: START
+          type: string
+        sellingPrice:
+          example: 15000.0
+          format: double
+          type: number
+        ingredients:
+          items:
+            $ref: '#/components/schemas/Ingredient'
+          type: array
+        dishCost:
+          example: 1200.0
+          format: double
+          type: number
+        grossMargin:
+          example: 13800.0
+          format: double
+          type: number
+      type: object
+    StockValue:
+      example:
+        unit: KG
+        quantity: 10.5
+      properties:
+        quantity:
+          example: 10.5
+          format: double
+          type: number
+        unit:
+          enum:
+          - KG
+          - L
+          - PIECE
+          - UNIT
+          example: KG
+          type: string
+      type: object
+
